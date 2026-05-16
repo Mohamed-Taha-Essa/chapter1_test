@@ -35,107 +35,12 @@
          like the moon/sun icon and social icons in the footer. -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 
-    <!-- Google Fonts — "Inter" is a modern, highly readable sans-serif
-         typeface popular in modern web/app design (used by GitHub, etc.). -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-    <style>
-        /* ===== CUSTOM CSS — Extends Bootstrap with our own modern styling ===== */
-
-        /* Apply the Inter font globally for a clean, modern look */
-        body {
-            font-family: 'Inter', sans-serif;
-            /* "min-vh-100" is handled via Bootstrap class, but we also set it
-               here to ensure the body always fills the viewport height.
-               This pushes the footer to the bottom on short-content pages. */
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-
-        /* Make the <main> element grow to fill available space,
-           pushing the footer down on pages with little content. */
-        main {
-            flex: 1;
-        }
-
-        /* ---- Dark Theme Overrides ---- */
-        /* Bootstrap 5.3+ supports [data-bs-theme="dark"]. We add extra
-           polish on top of Bootstrap's built-in dark mode colours. */
-        [data-bs-theme="dark"] {
-            --bs-body-bg: #0f172a;
-            /* Deep navy background */
-            --bs-body-color: #e2e8f0;
-            /* Soft white text */
-        }
-
-        /* Navbar custom styling — a subtle frosted-glass effect */
-        .navbar {
-            backdrop-filter: blur(12px);
-            /* Blurs content behind navbar */
-            -webkit-backdrop-filter: blur(12px);
-            /* Safari support */
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        [data-bs-theme="dark"] .navbar {
-            background-color: rgba(15, 23, 42, 0.85) !important;
-        }
-
-        [data-bs-theme="light"] .navbar {
-            background-color: rgba(255, 255, 255, 0.85) !important;
-        }
-
-        /* Logo styling — bold gradient text effect */
-        .navbar-brand {
-            font-weight: 700;
-            font-size: 1.5rem;
-            background: linear-gradient(135deg, #6366f1, #8b5cf6);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        /* Nav link hover animation — smooth colour transition */
-        .nav-link {
-            transition: color 0.2s ease, transform 0.2s ease;
-            font-weight: 500;
-        }
-
-        .nav-link:hover {
-            transform: translateY(-1px);
-            /* Subtle lift on hover */
-        }
-
-        /* Footer styling */
-        footer {
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        [data-bs-theme="light"] footer {
-            border-top: 1px solid rgba(0, 0, 0, 0.08);
-        }
-
-        /* Theme toggle button — the dark/light mode switch */
-        .theme-toggle {
-            cursor: pointer;
-            border: none;
-            background: transparent;
-            font-size: 1.25rem;
-            transition: transform 0.3s ease;
-        }
-
-        .theme-toggle:hover {
-            transform: rotate(30deg);
-            /* Fun rotation on hover */
-        }
-    </style>
 </head>
 
 <!-- data-bs-theme="dark" — Activates Bootstrap 5.3's built-in dark mode.
      All Bootstrap components automatically adapt their colours. -->
 
-<body data-bs-theme="dark">
+<body data-bs-theme="dark" class="d-flex flex-column min-vh-100">
 
     <!-- ===== NAVBAR =====
          "navbar"          — Bootstrap base class that makes this a navigation bar.
@@ -154,7 +59,7 @@
                  and bolder than regular nav links to stand out as the site identity.
                  "url 'blog:post_list'" — Django template tag that generates the URL
                  for the 'post_list' named route (defined in urls.py). -->
-            <a class="navbar-brand" href="{% url 'blog:post_list' %}">
+            <a class="navbar-brand fw-bold fs-4" href="{% url 'blog:post_list' %}">
                 <!-- "bi bi-journal-richtext" — A Bootstrap Icon representing a journal,
                      fitting for a blog logo. "me-2" adds right margin (spacing level 2). -->
                 <i class="bi bi-journal-richtext me-2"></i>MyBlog
@@ -207,11 +112,11 @@
 
                     <!-- Theme Toggle Button (Dark/Light mode switch) -->
                     <li class="nav-item ms-lg-3">
-                        <!-- "theme-toggle" — Our custom class (see <style>) that adds
-                             pointer cursor, removes border, and adds hover rotation.
-                             "text-warning" — Bootstrap utility for yellow/amber colour
-                             (appropriate for a sun/moon icon). -->
-                        <button class="theme-toggle text-warning" id="themeToggle" title="Toggle dark/light mode">
+                        <!-- "btn btn-link" — Bootstrap button styling as a link.
+                             "text-warning" — Bootstrap utility for yellow/amber colour.
+                             "p-0" — Removes padding.
+                             "fs-5" — Font size level 5. -->
+                        <button class="btn btn-link text-warning p-0 fs-5" id="themeToggle" title="Toggle dark/light mode">
                             <!-- "bi bi-moon-stars-fill" — Icon showing moon + stars (dark mode). -->
                             <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
                         </button>
@@ -227,7 +132,7 @@
          <main> — Semantic HTML5 element indicating the primary page content.
          "container" — Responsive centered wrapper with horizontal padding.
          "py-5"     — Adds generous top & bottom padding (3rem) for clean spacing. -->
-    <main class="container py-5">
+    <main class="container py-5 flex-grow-1">
         <!-- "block content" — Placeholder block that child templates
              override to inject their own page-specific content.
              Everything between block and endblock is the default
