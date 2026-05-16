@@ -1,0 +1,322 @@
+<!-- base.html — Master layout template for the entire blog site.
+     All other templates extend this file using the "extends" tag.
+     This provides a consistent navbar, footer, and container layout. -->
+
+{% load static %}
+<!-- "load static" — Loads Django's static template tag so we can
+     reference static files (CSS, JS, images) if needed later. -->
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <!-- viewport meta — Ensures the page is responsive on mobile devices.
+         "width=device-width" sets the viewport width to the device width.
+         "initial-scale=1.0" sets the default zoom level to 100%. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="description" content="MyBlog — A modern blog built with Django.">
+
+    <title>
+        <!-- "block title" — A placeholder block that child templates can
+             override to set a custom page title. If not overridden, the
+             default "MyBlog" title is used. -->
+        {% block title %}MyBlog{% endblock %}
+    </title>
+
+    <!-- Bootstrap 5 CSS CDN — Loads the Bootstrap framework stylesheet.
+         Bootstrap provides a grid system, pre-built components (navbar,
+         cards, buttons, etc.), and utility classes for rapid UI development. -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons CDN — Loads icon fonts used for visual elements
+         like the moon/sun icon and social icons in the footer. -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+
+    <!-- Google Fonts — "Inter" is a modern, highly readable sans-serif
+         typeface popular in modern web/app design (used by GitHub, etc.). -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* ===== CUSTOM CSS — Extends Bootstrap with our own modern styling ===== */
+
+        /* Apply the Inter font globally for a clean, modern look */
+        body {
+            font-family: 'Inter', sans-serif;
+            /* "min-vh-100" is handled via Bootstrap class, but we also set it
+               here to ensure the body always fills the viewport height.
+               This pushes the footer to the bottom on short-content pages. */
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Make the <main> element grow to fill available space,
+           pushing the footer down on pages with little content. */
+        main {
+            flex: 1;
+        }
+
+        /* ---- Dark Theme Overrides ---- */
+        /* Bootstrap 5.3+ supports [data-bs-theme="dark"]. We add extra
+           polish on top of Bootstrap's built-in dark mode colours. */
+        [data-bs-theme="dark"] {
+            --bs-body-bg: #0f172a;
+            /* Deep navy background */
+            --bs-body-color: #e2e8f0;
+            /* Soft white text */
+        }
+
+        /* Navbar custom styling — a subtle frosted-glass effect */
+        .navbar {
+            backdrop-filter: blur(12px);
+            /* Blurs content behind navbar */
+            -webkit-backdrop-filter: blur(12px);
+            /* Safari support */
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        [data-bs-theme="dark"] .navbar {
+            background-color: rgba(15, 23, 42, 0.85) !important;
+        }
+
+        [data-bs-theme="light"] .navbar {
+            background-color: rgba(255, 255, 255, 0.85) !important;
+        }
+
+        /* Logo styling — bold gradient text effect */
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Nav link hover animation — smooth colour transition */
+        .nav-link {
+            transition: color 0.2s ease, transform 0.2s ease;
+            font-weight: 500;
+        }
+
+        .nav-link:hover {
+            transform: translateY(-1px);
+            /* Subtle lift on hover */
+        }
+
+        /* Footer styling */
+        footer {
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        [data-bs-theme="light"] footer {
+            border-top: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        /* Theme toggle button — the dark/light mode switch */
+        .theme-toggle {
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            font-size: 1.25rem;
+            transition: transform 0.3s ease;
+        }
+
+        .theme-toggle:hover {
+            transform: rotate(30deg);
+            /* Fun rotation on hover */
+        }
+    </style>
+</head>
+
+<!-- data-bs-theme="dark" — Activates Bootstrap 5.3's built-in dark mode.
+     All Bootstrap components automatically adapt their colours. -->
+
+<body data-bs-theme="dark">
+
+    <!-- ===== NAVBAR =====
+         "navbar"          — Bootstrap base class that makes this a navigation bar.
+         "navbar-expand-lg" — Collapses the navbar into a hamburger menu on screens
+                              smaller than "lg" (992px). On lg+ screens, links are inline.
+         "sticky-top"      — Keeps the navbar fixed at the top of the viewport when
+                              the user scrolls down the page.
+         "py-3"            — Adds vertical (top & bottom) padding of 1rem (spacing level 3). -->
+    <nav class="navbar navbar-expand-lg sticky-top py-3">
+
+        <!-- "container" — A responsive fixed-width wrapper that centers content
+             and adds horizontal padding. On xl screens it's 1140px wide, etc. -->
+        <div class="container">
+
+            <!-- "navbar-brand" — Styles the brand/logo text. It is rendered larger
+                 and bolder than regular nav links to stand out as the site identity.
+                 "url 'blog:post_list'" — Django template tag that generates the URL
+                 for the 'post_list' named route (defined in urls.py). -->
+            <a class="navbar-brand" href="{% url 'blog:post_list' %}">
+                <!-- "bi bi-journal-richtext" — A Bootstrap Icon representing a journal,
+                     fitting for a blog logo. "me-2" adds right margin (spacing level 2). -->
+                <i class="bi bi-journal-richtext me-2"></i>MyBlog
+            </a>
+
+            <!-- "navbar-toggler" — The hamburger button shown on small screens (below lg).
+                 Clicking it toggles the collapsible nav menu via "data-bs-toggle".
+                 "data-bs-target" — Points to the element ID to show/hide. -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <!-- "navbar-toggler-icon" — Renders the ☰ hamburger icon. -->
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <!-- "collapse navbar-collapse" — This wrapper hides its children on small
+                 screens and reveals them when the toggler button is clicked.
+                 On lg+ screens it's always visible. -->
+            <div class="collapse navbar-collapse" id="navbarNav">
+
+                <!-- "navbar-nav" — Styles the list of navigation links.
+                     "ms-auto"    — Pushes the nav items to the RIGHT side of the navbar
+                                    using auto left margin (margin-start auto).
+                     "align-items-center" — Vertically centers all nav items. -->
+                <ul class="navbar-nav ms-auto align-items-center">
+
+                    <!-- "nav-item" — Wrapper for each navigation link. -->
+                    <li class="nav-item">
+                        <!-- "nav-link" — Styles the anchor as a navbar link
+                             (proper padding, colour, hover states).
+                             "active" — Highlights this link as the current page. -->
+                        <a class="nav-link active" href="{% url 'blog:post_list' %}">
+                            <!-- "bi bi-house-door" — Bootstrap Icon for a house (Home). -->
+                            <i class="bi bi-house-door me-1"></i>Home
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'blog:post_list' %}">
+                            <!-- "bi bi-file-earmark-text" — Icon representing a document/post. -->
+                            <i class="bi bi-file-earmark-text me-1"></i>Posts
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <!-- "bi bi-info-circle" — Icon for an info/about page. -->
+                            <i class="bi bi-info-circle me-1"></i>About
+                        </a>
+                    </li>
+
+                    <!-- Theme Toggle Button (Dark/Light mode switch) -->
+                    <li class="nav-item ms-lg-3">
+                        <!-- "theme-toggle" — Our custom class (see <style>) that adds
+                             pointer cursor, removes border, and adds hover rotation.
+                             "text-warning" — Bootstrap utility for yellow/amber colour
+                             (appropriate for a sun/moon icon). -->
+                        <button class="theme-toggle text-warning" id="themeToggle" title="Toggle dark/light mode">
+                            <!-- "bi bi-moon-stars-fill" — Icon showing moon + stars (dark mode). -->
+                            <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <!-- ===== END NAVBAR ===== -->
+
+
+    <!-- ===== MAIN CONTENT =====
+         <main> — Semantic HTML5 element indicating the primary page content.
+         "container" — Responsive centered wrapper with horizontal padding.
+         "py-5"     — Adds generous top & bottom padding (3rem) for clean spacing. -->
+    <main class="container py-5">
+        <!-- "block content" — Placeholder block that child templates
+             override to inject their own page-specific content.
+             Everything between block and endblock is the default
+             (empty here, so child templates must provide content). -->
+        {% block content %}
+        {% endblock %}
+    </main>
+    <!-- ===== END MAIN CONTENT ===== -->
+
+
+    <!-- ===== FOOTER =====
+         "py-4"   — Vertical padding (1.5rem) for comfortable spacing.
+         "mt-auto" — Pushes the footer to the bottom of the page using
+                     auto top margin (works with flexbox on <body>). -->
+    <footer class="py-4 mt-auto">
+        <div class="container">
+            <!-- "row align-items-center" — Bootstrap grid row.
+                 "align-items-center" vertically centers all columns. -->
+            <div class="row align-items-center">
+
+                <!-- "col-md-6" — Takes 6/12 (50%) width on medium+ screens.
+                     On smaller screens it's full width (stacked). -->
+                <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
+                    <!-- "text-center"    — Centers text on all screen sizes.
+                         "text-md-start"  — Left-aligns text on md+ screens.
+                         "mb-3 mb-md-0"   — Bottom margin on mobile, none on md+.
+                         "text-body-secondary" — Bootstrap muted/secondary text colour. -->
+                    <p class="text-body-secondary mb-0">
+                        &copy; 2026 <strong>MyBlog</strong>. Built with Django &amp; Bootstrap.
+                    </p>
+                </div>
+
+                <!-- "col-md-6" — Second column, right-aligned on desktop.
+                     "text-center text-md-end" — Centered on mobile, right on md+. -->
+                <div class="col-md-6 text-center text-md-end">
+                    <!-- Social media icon links -->
+                    <!-- "text-body-secondary" — Muted colour.
+                         "me-3"              — Right margin for spacing between icons.
+                         "fs-5"              — Font-size level 5 (1.25rem) for larger icons.
+                         "text-decoration-none" — Removes the underline from links. -->
+                    <a href="#" class="text-body-secondary me-3 fs-5 text-decoration-none">
+                        <i class="bi bi-github"></i>
+                    </a>
+                    <a href="#" class="text-body-secondary me-3 fs-5 text-decoration-none">
+                        <i class="bi bi-twitter-x"></i>
+                    </a>
+                    <a href="#" class="text-body-secondary fs-5 text-decoration-none">
+                        <i class="bi bi-linkedin"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <!-- ===== END FOOTER ===== -->
+
+
+    <!-- Bootstrap 5 JavaScript Bundle (includes Popper.js for dropdowns, tooltips, etc.)
+         This MUST be at the bottom of <body> so the DOM is ready before JS runs. -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Dark/Light Theme Toggle Script -->
+    <script>
+        // Get references to the toggle button and its icon
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+
+        // Read saved theme from localStorage (persists across page reloads)
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        document.body.setAttribute('data-bs-theme', savedTheme);
+        updateIcon(savedTheme);
+
+        // Toggle between dark and light when button is clicked
+        themeToggle.addEventListener('click', () => {
+            const current = document.body.getAttribute('data-bs-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            document.body.setAttribute('data-bs-theme', next);
+            localStorage.setItem('theme', next);
+            updateIcon(next);
+        });
+
+        // Swap the icon between moon (dark) and sun (light)
+        function updateIcon(theme) {
+            if (theme === 'dark') {
+                themeIcon.className = 'bi bi-moon-stars-fill';
+            } else {
+                themeIcon.className = 'bi bi-sun-fill';
+            }
+        }
+    </script>
+</body>
+
+</html>

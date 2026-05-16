@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+{# post_list.html — Displays all published blog posts as modern cards.
+This template EXTENDS base.html, inheriting the navbar, footer,
+and page structure. It only overrides the "title" and "content" blocks.
+"extends" must be the FIRST template tag in any child template. #}
+
+<!-- Override the <title> block from base.html -->
+{% block title %}Latest Posts — MyBlog{% endblock %}
+
+
+{% block content %}
+<!-- ===== PAGE HEADER =====
+     "text-center" — Centers the heading text horizontally.
+     "mb-5"        — Adds bottom margin (3rem) to separate the heading from
+                     the card grid below. -->
+<div class="text-center mb-5">
+
+    <!-- "display-6" — Bootstrap display heading; larger and lighter than
+         regular headings. Creates an eye-catching page title.
+         "fw-bold"   — Sets font-weight to 700 (bold).
+         "mb-2"      — Small bottom margin before the subtitle. -->
+    <h1 class="display-6 fw-bold mb-2">
+        <!-- "bi bi-newspaper" — Bootstrap Icon for a newspaper, appropriate
+             for a blog posts listing page. "me-2" adds right margin. -->
+        <i class="bi bi-newspaper me-2"></i>Latest Blog Posts
+    </h1>
+
+    <!-- "lead"              — Bootstrap class for larger, lighter paragraph
+                               text, used for subtitles/taglines.
+         "text-body-secondary" — Muted/secondary colour that adapts to
+                                  dark and light themes automatically. -->
+    <p class="lead text-body-secondary">
+        Discover stories, ideas, and insights from our community.
+    </p>
+</div>
+
+
+<!-- ===== POSTS GRID =====
+     "row" — Bootstrap grid row that contains columns.
+     "g-4" — Sets the gutter (gap) between grid columns to 1.5rem on all sides,
+             giving cards comfortable breathing room. -->
+<div class="row g-4">
+
+    <!-- Django template "for" loop: iterates over every Post object
+         passed from the view via the context variable "posts".
+         For each post, a card column is rendered. -->
+    {% for post in posts %}
+
+    <!-- "col-md-6"  — Each card takes 6/12 columns (50% width) on medium screens.
+         "col-lg-4"  — Each card takes 4/12 columns (33.3% width) on large screens.
+         On small screens (<768px) each card is full-width by default. -->
+    <div class="col-md-6 col-lg-4">
+
+        <!-- "card"    — Bootstrap card component: a bordered box with rounded corners,
+                         background, and optional header/body/footer sections.
+             "h-100"   — Forces the card to fill 100% of the column's height so all
+                         cards in a row are the same height (even with different content).
+             "border-0" — Removes the default card border for a cleaner look.
+             "shadow-sm" — Adds a subtle box-shadow for depth/elevation effect. -->
+        <div class="card h-100 border-0 shadow-sm"
+            style="transition: transform 0.3s ease, box-shadow 0.3s ease; cursor: pointer;"
+            onmouseenter="this.style.transform='translateY(-6px)'; this.style.boxShadow='0 12px 40px rgba(99,102,241,0.15)'"
+            onmouseleave="this.style.transform='translateY(0)'; this.style.boxShadow=''">
+            <!-- Inline hover animation:
+                 "transition: transform 0.3s ease" — Smoothly animates the card lifting up.
+                 "onmouseenter" — Card moves UP by 6px + purple-tinted shadow.
+                 "onmouseleave" — Resets the card position and shadow. -->
+
+            <!-- "card-body" — The main content area of the card.
+                 "d-flex flex-column" — Makes the card body a flexbox column layout,
+                                        which lets us push the "Read More" button to
+                                        the bottom using "mt-auto". -->
+            <div class="card-body d-flex flex-column">
+
+                <!-- Category/Tag Badge — Visual flair at the top of each card. -->
+                <!-- "badge"           — Small Bootstrap label/pill component.
+                     "bg-primary"      — Primary colour background (indigo-blue).
+                     "bg-opacity-10"   — Makes background 10% opaque (very subtle).
+                     "text-primary"    — Text in the primary colour.
+                     "mb-3"            — Bottom margin to separate from the title. -->
+                <span class="badge bg-primary bg-opacity-10 text-primary mb-3" style="width: fit-content;">
+                    <!-- "bi bi-bookmark-fill" — Filled bookmark icon for visual accent. -->
+                    <i class="bi bi-bookmark-fill me-1"></i>Blog Post
+                </span>
+
+                <!-- Post Title -->
+                <!-- "card-title" — Bootstrap class for the card's heading.
+                     "h5"        — Heading level 5 size.
+                     "fw-bold"   — Bold font weight for emphasis. -->
+                <h5 class="card-title fw-bold">{{ post.title }}</h5>
+                <!-- "post.title" — Django template variable that outputs
+                     the value of the Post model's "title" field. -->
+
+                <!-- Post Body Preview -->
+                <!-- "card-text"         — Bootstrap class for card paragraph text.
+                     "text-body-secondary" — Muted text colour (adapts to dark/light).
+                     "mb-3"              — Bottom margin for spacing.
+                     "flex-grow-1"       — Makes this text area grow to fill available
+                                           vertical space, keeping the button at the bottom. -->
+                <p class="card-text text-body-secondary mb-3 flex-grow-1">
+                    {{ post.body|truncatechars:150 }}
+                    <!-- "post.body|truncatechars:150" — Django template filter.
+                         "truncatechars:150" cuts the body text to the first 150
+                         characters and appends "…" (ellipsis). This creates a
+                         clean preview/excerpt of the full post content. -->
+                </p>
+
+                <!-- Post Metadata (Author & Date) -->
+                <!-- "d-flex"             — Makes this div a horizontal flexbox container.
+                     "align-items-center" — Vertically centers the items inside.
+                     "mb-3"              — Bottom margin before the "Read More" button.
+                     "small"             — Reduces font size for metadata text. -->
+                <div class="d-flex align-items-center mb-3 small text-body-secondary">
+
+                    <!-- Author Avatar Placeholder -->
+                    <!-- "rounded-circle" — Makes the element a perfect circle.
+                         "bg-primary bg-opacity-25" — Light primary-coloured background.
+                         "d-flex align-items-center justify-content-center"
+                             — Centers the icon inside the circle both horizontally
+                               and vertically.
+                         Inline width/height set to 32px for a small avatar. -->
+                    <div class="rounded-circle bg-primary bg-opacity-25
+                                d-flex align-items-center justify-content-center me-2"
+                        style="width: 32px; height: 32px;">
+                        <!-- "bi bi-person-fill" — Person silhouette icon.
+                             "text-primary"     — Primary colour for the icon. -->
+                        <i class="bi bi-person-fill text-primary"></i>
+                    </div>
+
+                    <div>
+                        <!-- Author username from the related User model -->
+                        <span class="fw-medium">{{ post.author.username }}</span>
+                        <!-- "post.author.username" — Accesses the "username"
+                             field from the User model linked via ForeignKey. -->
+
+                        <!-- "mx-1" — Adds small horizontal (left & right) margin as a separator. -->
+                        <span class="mx-1">·</span>
+
+                        <!-- Formatted publish date -->
+                        <span>{{ post.publish|date:"M d, Y" }}</span>
+                        <!-- "post.publish|date:'M d, Y'" — Django date filter.
+                             Formats the DateTimeField into "May 16, 2026" style.
+                             M = abbreviated month, d = day, Y = 4-digit year. -->
+                    </div>
+                </div>
+
+                <!-- Read More Button -->
+                <!-- "btn"         — Base Bootstrap button class.
+                     "btn-outline-primary" — Outlined button (transparent background,
+                                             primary-coloured border and text).
+                                             On hover, it fills with the primary colour.
+                     "btn-sm"     — Smaller button size (less padding, smaller font).
+                     "mt-auto"    — Pushes the button to the BOTTOM of the flex column,
+                                    ensuring uniform button alignment across cards.
+                     "rounded-pill" — Fully rounded/pill-shaped button corners.
+                     "px-4"       — Extra horizontal padding for a wider button. -->
+                <a href="#" class="btn btn-outline-primary btn-sm mt-auto rounded-pill px-4"
+                    style="width: fit-content;">
+                    Read More <i class="bi bi-arrow-right ms-1"></i>
+                    <!-- "bi bi-arrow-right" — Right arrow icon after "Read More" text.
+                         "ms-1" — Small left margin to separate icon from text. -->
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Django "empty" tag: renders ONLY when the "posts" queryset is empty
+         (i.e., there are no published posts to display). -->
+    {% empty %}
+
+    <!-- "col-12" — Full-width column (12/12 columns = 100% width). -->
+    <div class="col-12">
+
+        <!-- "text-center" — Centers all content horizontally.
+             "py-5"       — Large vertical padding (3rem) for visual breathing room. -->
+        <div class="text-center py-5">
+
+            <!-- Large icon for the empty state -->
+            <!-- "display-1"       — Very large Bootstrap display size.
+                 "text-body-secondary" — Muted colour.
+                 "mb-3"           — Bottom margin before the heading. -->
+            <i class="bi bi-journal-x display-1 text-body-secondary mb-3"></i>
+            <!-- "bi bi-journal-x" — Journal icon with an X, indicating "no posts". -->
+
+            <h3 class="text-body-secondary">No posts available</h3>
+
+            <p class="text-body-secondary">
+                Check back later for new content!
+            </p>
+        </div>
+    </div>
+
+    <!-- "endfor" — Closes the Django for loop. -->
+    {% endfor %}
+
+</div>
+<!-- ===== END POSTS GRID ===== -->
+{% endblock %}
