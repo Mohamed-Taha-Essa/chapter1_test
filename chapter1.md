@@ -108,7 +108,7 @@ Post.objects.create(
     body='Post body.',
     author=user
 )
-```
+``` 
 
 ### Method 3 — Get or Create
 
