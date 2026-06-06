@@ -19,7 +19,7 @@
         <h1 class="mb-4 text-center">Post List</h1>
 
        <div class="container">
-            {% for post in posts %}
+            {% if post %}
                 <div class="card mb-3 shadow-sm bg-dark text-white">
                     <h5 class="card-header">{{post.author}}</h5> 
                     <span class="badge bg-secondary">{{post.publish}}</span>
@@ -27,11 +27,15 @@
                     <div class="card-body">
                         <h5 class="card-title">{{post.title}}</h5>
                         <p class="card-text">{{post.body}}</p>
-                        <a href="{{ post.get_absolute_url }}" class="btn btn-primary">Read more</a>
+                        <a href="#" class="btn btn-primary">Read more</a>
                     </div>
                     </div>
-            {% endfor %}   
-    
+          
+            {% else %}
+                <div class="alert alert-warning" role="alert">
+                    Post not found.
+                </div>
+            {% endif %}
         </div>
         
         <script

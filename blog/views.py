@@ -4,9 +4,7 @@
 # and return HTTP responses (usually rendered HTML templates).
 
 from django.shortcuts import render
-# "render" is a Django shortcut that combines a template with a
-# context dictionary and returns an HttpResponse with the rendered text.
-# It replaces the manual process of loading a template and rendering it.
+from django.urls import resolve
 
 from .models import Post
 # Import the Post model from the same app's models.py.
@@ -14,38 +12,52 @@ from .models import Post
 
 
 def post_list(request):
-    """
-    View function to display all published blog posts.
+    # Fetch all Post objects from the database, ordered by published_date in descending order.
+    posts = Post.objects.all()
+    for posting in posts:
+        print(posting.get_absolute_url())
 
-    How it works:
-    1. Queries the database for posts with status = PUBLISHED.
-    2. Passes the resulting queryset to the template as 'posts'.
-    3. Django's template engine renders the HTML with real data.
-
-    Args:
-        request: The HTTP request object sent by the user's browser.
-                 Django automatically passes this to every view function.
-
-    Returns:
-        HttpResponse: Rendered HTML page showing all published posts.
-    """
-
-    # Query only published posts from the database.
-    # "Post.objects" is the default Manager that provides database query methods.
-    # ".filter()" returns a QuerySet — a lazy collection of database rows
-    #   that match the given condition(s).
-    # "status=Post.Status.PUBLISHED" filters posts where the status field
-    #   equals 'PB' (the PUBLISHED choice defined in the model).
-    # Because the model's Meta class has ordering=['-publish'],
-    #   the results are automatically ordered by publish date (newest first).
-    posts = Post.objects.filter(status=Post.Status.PUBLISHED)
-
-    # Render the template and return the HTTP response.
-    # Arguments:
-    #   request — the original HTTP request (required by render).
-    #   'blog/post_list.html' — path to the template file,
-    #       relative to the app's "templates/" directory.
-    #   {'posts': posts} — the context dictionary. The key 'posts'
-    #       becomes a variable available inside the template.
-    #       The template uses {% for post in posts %} to loop over it.
     return render(request, 'blog/post_list.html', {'posts': posts})
+
+from urllib.parse import urlparse
+from django.urls import resolve
+from django.http import Http404, HttpResponseRedirect
+
+
+def myview(request):
+    next = request.META.get("HTTP_REFERER", None) or "/"
+    response = HttpResponseRedirect(next)
+
+    # modify the request and response as required, e.g. change locale
+    # and set corresponding locale cookie
+
+    view, args, kwargs = resolve(urlparse(next)[2])
+    kwargs["request"] = request
+    try:
+        view(*args, **kwargs)
+    except Http404:
+        return HttpResponseRedirect("/")
+    return response
+def post_detail(request, id):
+  
+    post = Post.objects.get(id=id)
+    url = f'/blog/{id}/'
+    #print(request.path)
+
+    match = resolve(url)
+    # print(match)
+    print(match.func)
+    print(match.args)
+    print(match.kwargs)
+    print(match.url_name)
+
+    #what is using for 
+    """debugging URLs
+    security checks
+    logging
+    middleware analysis"""
+
+
+
+  
+    return render(request, 'blog/post_detail.html', {'post': post})
