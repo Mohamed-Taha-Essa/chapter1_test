@@ -1,122 +1,190 @@
-In this chapter, we will add pagination to the post list page to navigate through all posts. We will also
-learn how to build class-based views with Django and convert the post_list view to a class-based
-view named PostListView.
-We will create the post_share view to share posts via email. We will use Django forms to share posts
-and send email recommendations via Simple Mail Transfer Protocol (SMTP). To add comments to
-posts, we will create a Comment model to store comments, and we will build the post_comment view
-using forms for models.
+Recommending posts by email
+We will allow users to share blog posts with others by sending post recommendations via email. You
+will learn how to create forms in Django, handle data submission, and send emails with Django, en-
+hancing your blog with a personal touch.
+Take a minute to think about how you could use views, URLs, and templates to create this functionality
+using what you learned in the preceding chapter.
+To allow users to share posts via email, we will need to:
+1.Create a form for users to fill in their name, their email address, the recipient’s email address,
+and optional comments
+2.Create a view in the views.py file that handles the posted data and sends the email
+3.Add a URL pattern for the new view in the urls.py file of the blog application
+4.Create a template to display the form
 
-Using canonical URLs for models
-A website might have different pages that display the same content. In our application, the initial part
-of the content for each post is displayed both on the post list page and the post detail page. A canonical
-URL is the preferred URL for a resource. You can think of it as the URL of the most representative
-page for specific content. There might be different pages on your site that display posts, but there is
-a single URL that you use as the main URL for a post.
-
-Canonical URLs allow you to specify the URL for the master copy of a page. Django allows you to im-
-plement the get_absolute_url() method in your models to return the canonical URL for the object.
-We will use the post_detail URL defined in the URL patterns of the application to build the canon-
-ical URL for Post objects. Django provides different URL resolver functions that allow you to build
-URLs dynamically using their name and any required parameters. We will use the reverse() utility
-function of the django.urls module.
-Edit the models.py file of the blog application to import the reverse() function and add the get_
-absolute_url() method to the Post model as follows. The new code is highlighted in bold:
-from django.conf import settings
-from django.db import models
-from django.urls import reverse
-from django.utils import timezone
-class PublishedManager(models.Manager):
-def get_queryset(self):
-return (
-super().get_queryset().filter(status=Post.Status.PUBLISHED)
+Creating forms with Django
+Let’s start by building the form to share posts. Django has a built-in forms framework that allows you
+to create forms easily. The forms framework makes it simple to define the fields of the form, specify
+how they have to be displayed, and indicate how they have to validate input data. The Django forms
+framework offers a flexible way to render forms in HTML and handle data.
+Django comes with two base classes to build forms:
+•Form: This allows you to build standard forms by defining fields and validations.
+•ModelForm: This allows you to build forms tied to model instances. It provides all the func-
+tionalities of the base Form class, but form fields can be explicitly declared, or automatically
+generated, from model fields. The form can be used to create or edit model instances.
+First, create a forms.py file inside the directory of your blog application and add the following code to it:
+from django import forms
+class EmailPostForm(forms.Form):
+name = forms.CharField(max_length=25)
+email = forms.EmailField()
+to = forms.EmailField()
+comments = forms.CharField(
+required=False,
+widget=forms.Textarea
 )
-class Post(models.Model):
+We have defined our first Django form. The EmailPostForm form inherits from the base Form class.
+We use different field types to validate data accordingly.
+Forms can reside anywhere in your Django project. The convention is to place them inside
+a forms.py file for each application.
+The form contains the following fields:
+•name: An instance of CharField with a maximum length of 25 characters. We will use it for the
+name of the person sending the post.
+•email: An instance of EmailField. We will use the email of the person sending the post rec-
+ommendation.
+•
+to: An instance of EmailField. We will use the email address of the recipient, who will receive
+an email recommending the post.
+•
+comments: An instance of CharField. We will use it for comments to include in the post rec-
+ommendation email. We have made this field optional by setting required to False, and we
+have specified a custom widget to render the field.
+
+Each field type has a default widget that determines how the field is rendered in HTML. The name field
+is an instance of CharField. This type of field is rendered as an <input type="text"> HTML element.
+The default widget can be overridden with the widget attribute. In the comments field, we use the
+Textarea widget to display it as a <textarea> HTML element instead of the default <input> element.
+Field validation also depends on the field type. For example, the email and to fields are EmailField
+fields. Both fields require a valid email address; the field validation will otherwise raise a forms.
+ValidationError exception and the form will not validate. Other parameters are also taken into
+account for the form field validation, such as the name field having a maximum length of 25 or the
+comments field being optional.
+These are only some of the field types that Django provides for forms. You can find a list of all field
+types available at https://docs.djangoproject.com/en/5.0/ref/forms/fields/.
+Handling forms in views
+We have defined the form to recommend posts via email. Now, we need a view to create an instance
+of the form and handle the form submission.
+Edit the views.py file of the blog application and add the following code to it:
+from .forms import EmailPostForm
+def post_share(request, post_id):
+# Retrieve post by id
+post = get_object_or_404(
+Post,
+id=post_id,
+status=Post.Status.PUBLISHED
+)
+if request.method == 'POST':
+# Form was submitted
+form = EmailPostForm(request.POST)
+if form.is_valid():
+# Form fields passed validation
+cd = form.cleaned_data
+# ... send email
+else:
+form = EmailPostForm()
+return render(
+request,
+'blog/post/share.html',
+{'post': post,
+'form': form
+}
+)
+
+We have defined the post_share view that takes the request object and the post_id variable as pa-
+rameters. We use the get_object_or_404() shortcut to retrieve a published post by its id.
+We use the same view both for displaying the initial form and processing the submitted data. The HTTP
+request method allows us to differentiate whether the form is being submitted. A GET request will
+indicate that an empty form has to be displayed to the user and a POST request will indicate the form
+is being submitted. We use request.method == 'POST' to differentiate between the two scenarios.
+This is the process to display the form and handle the form submission:
+1.
+When the page is loaded for the first time, the view receives a GET request. In this case, a new
+EmailPostForm instance is created and stored in the form variable. This form instance will be
+used to display the empty form in the template:
+form = EmailPostForm()
+2.
+When the user fills in the form and submits it via POST, a form instance is created using the
+submitted data contained in request.POST:
+if request.method == 'POST':
+# Form was submitted
+form = EmailPostForm(request.POST)
+3.After this, the data submitted is validated using the form’s is_valid() method. This method
+validates the data introduced in the form and returns True if all fields contain valid data. If
+any field contains invalid data, then is_valid() returns False. The list of validation errors
+can be obtained with form.errors.
+4.If the form is not valid, the form is rendered in the template again, including the data submitted.
+Validation errors will be displayed in the template.
+5.If the form is valid, the validated data is retrieved with form.cleaned_data. This attribute is a
+dictionary of form fields and their values. Forms not only validate the data but also clean the
+data by normalizing it to a consistent format.
+If your form data does not validate, cleaned_data will contain only the valid fields.
+We have implemented the view to display the form and handle the form submission. We will now
+learn how to send emails using Django and then we will add that functionality to the post_share view.
+
+Sending emails with Django
+Sending emails with Django is very straightforward. You need to have a local SMTP server, or you need
+to access an external SMTP server, like your email service provider.
+The following settings allow you to define the SMTP configuration to send emails with Django:
+•EMAIL_HOST: The SMTP server host; the default is localhost
+•EMAIL_PORT: The SMTP port; the default is 25
+•EMAIL_HOST_USER: The username for the SMTP server
+•EMAIL_HOST_PASSWORD: The password for the SMTP server
+•EMAIL_USE_TLS: Whether to use a Transport Layer Security (TLS) secure connection
+•EMAIL_USE_SSL: Whether to use an implicit TLS secure connection
+Additionally, you can use the DEFAULT_FROM_EMAIL setting to specify the default sender when sending
+emails with Django. For this example, we will use Google’s SMTP server with a standard Gmail account.
+Working with environment variables
+We will add SMTP configuration settings to the project, and we will load the SMTP credentials from
+environment variables. By using environment variables, we will avoid embedding credentials in the
+source code. There are multiple reasons to keep configuration separate from the code:
+•Security: Credentials or secret keys in the code can lead to unintentional exposure, especially
+if you push the code to public repositories.
+•Flexibility: Keeping the configuration separate will allow you to use the same code base across
+different environments without any changes. You will learn how to build multiple environments
+in Chapter 17, Going Live.
+•Maintainability: Changing a configuration won’t require a code change, ensuring that your
+project remains consistent across versions.
+To facilitate the separation of configuration from code, we are going to use python-decouple. This
+library simplifies the use of environment variables in your projects. You can find information about
+python-decouple at https://github.com/HBNetwork/python-decouple.
+First, install python-decouple via pip by running the following command:
+python -m pip install python-decouple==3.8
+Then, create a new file inside your project’s root directory and name it .env. The .env file will contain
+key-value pairs of environment variables. Add the following lines to the new file:
+EMAIL_HOST_USER=your_account@gmail.com
+EMAIL_HOST_PASSWORD=
+DEFAULT_FROM_EMAIL=My Blog <your_account@gmail.com>
+
+If you have a Gmail account, replace your_account@gmail.com with your Gmail account. The EMAIL_
+HOST_PASSWORD variable has no value yet, we will add it later. The DEFAULT_FROM_EMAIL variable will
+be used to specify the default sender for our emails. If you don’t have a Gmail account, you can use
+the SMTP credentials for your email service provider.
+If you are using a git repository for your code, make sure to include .env in the .gitignore file of
+your repository. By doing so, you ensure that credentials are excluded from the repository.
+Edit the settings.py file of your project and add the following code to it:
+from decouple import config
 # ...
-class Meta:
-ordering = ['-publish']
-indexes = [
-models.Index(fields=['-publish']),
-]
-def __str__(self):
-return self.title
-def get_absolute_url(self):
-return reverse(
-'blog:post_detail',
-args=[self.id]
-)
-The reverse() function will build the URL dynamically using the URL name defined in the URL pat-
-terns. We have used the blog namespace followed by a colon and the post_detail URL name. Remem-
-ber that the blog namespace is defined in the main urls.py file of the project when including the URL
-patterns from blog.urls. The post_detail URL is defined in the urls.py file of the blog application.
-
-
-explain for studensts using shell to print url using reverse
-
-<a href="{% url 'post_detail' %}">
-    Post Detail
-</a>
-# urls.py
-if you have this url pattern:
-path("post_detail/<int:id>/", views.post_detail, name="post_detail")
-then you will show in html like this:
-<a href="/post_detail/1/">
-    Post Detail
-</a>
-
-but in your model or view or in python code you can't use {% url %} tag as it used in template files.
-Instead, you can use the reverse() function to build the URL dynamically.
-
-from django.urls import reverse
-
-url = reverse("post_detail", args=[1])
-
-print(url)
-# Output: /post_detail/1/
-
-why using reverse intead of writing direct url like this 
-return redirect("post_detail/")
-
-as if we change the path in urls.py file, the redirect will not work anymore.but reverse generate url dynamically.
-
-post = Post.objects.get(id=5)
-url = reverse("post_detail", args=[post.id])
-print(url)
-# Output: /post_detail/5/
-# in future /post_detail/5/ will be /posts/5/  or /blog/django-admin-tips/ 
-how to make object know the url of itself?
-by write get_absolute_url() method in the model:
-def get_absolute_url(self):
-    return reverse(
-        'blog:post_detail',
-        args=[self.id]
-    )
-
-
-#Creating SEO-friendly URLs for posts
-The canonical URL for a blog post detail view currently looks like /blog/1/. We will change the URL
-pattern to create SEO-friendly URLs for posts. We will be using both the publish date and slug values
-to build the URLs for single posts. By combining dates, we will make a post detail URL to look like /
-blog/2024/1/1/who-was-django-reinhardt/. We will provide search engines with friendly URLs to
-index, containing both the title and date of the post.
-To retrieve single posts with the combination of publication date and slug, we need to ensure that no
-post can be stored in the database with the same slug and publish date as an existing post. We will
-prevent the Post model from storing duplicated posts by defining slugs to be unique for the publica-
-tion date of the post.
-Edit the models.py file and add the following unique_for_date parameter to the slug field of the
-Post model:
-class Post(models.Model):
-# ...
-slug = models.SlugField(
-max_length=250,
-unique_for_date='publish'
-)
-# ..
-By using unique_for_date, the slug field is now required to be unique for the date stored in the
-publish field. Note that the publish field is an instance of DateTimeField, but the check for unique
-values will be done only against the date (not the time). Django will prevent you from saving a new post
-with the same slug as an existing post for a given publication date. We have now ensured that slugs are
-unique for the publication date, so we can now retrieve single posts by the publish and slug fields.
-We have changed our models, so, let’s create migrations. Note that unique_for_date is not enforced
-at the database level, so no database migration is required. However, Django uses migrations to keep
-track of all model changes. We will create a migration just to keep migrations aligned with the current
-state of the model.
+# Email server configuration
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL')
+The EMAIL_HOST_USER, EMAIL_HOST_PASSWORD and DEFAULT_FROM_EMAIL settings are now loaded from
+environment variables defined in the .env file.
+The provided EMAIL_HOST, EMAIL_PORT and EMAIL_USE_TLS settings are for Gmail’s SMTP server. If you
+don’t have a Gmail account, you can use the SMTP server configuration of your email service provider.
+Instead of Gmail, you can also use a professional, scalable email service that allows you to send emails
+via SMTP using your own domain, such as SendGrid (https://sendgrid.com/) or Amazon Simple
+Email Service (SES) (https://aws.amazon.com/ses/). Both services will require you to verify your
+domain and sender email accounts and will provide you with SMTP credentials to send emails. The
+django-anymail application simplifies the task of adding email service providers to your project
+like SendGrid or Amazon SES. You can find installation instructions for django-anymail at https://
+anymail.dev/en/stable/installation/, and the list of supported email service providers at https://
+anymail.dev/en/stable/esps/.
+If you can’t use an SMTP server, you can tel Django to write emails to the console by adding the fol-
+lowing setting to the settings.py file:
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+By using this setting, Django will output all emails to the shell instead of sending them. This is very
+useful for testing your application without an SMTP server.
+In order to send emails with Gmail’s SMTP server, make sure that two-step verification is active in
+your Gmail account.

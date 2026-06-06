@@ -22,7 +22,8 @@ class PostAdmin(admin.ModelAdmin):
     ordering = ['publish']
     raw_id_fields = ['author']
     show_facets = admin.ShowFacets.ALWAYS
-    
+    #to generate slug automatic from title 
+    # prepopulated_fields = {'slug': ('title',)}
     # Register the action - add it to this list
     actions = ["make_published" , "make_draft"] 
 
